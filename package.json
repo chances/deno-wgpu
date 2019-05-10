@@ -1,0 +1,29 @@
+{
+  "name": "teraflop",
+  "version": "0.1.0",
+  "description": "Node.js bindings for Google's Dawn WebGPU implementation",
+  "main": "dist/index.js",
+  "scripts": {
+    "install": "cmake-js compile",
+    "test": "tape"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chances/teraflop.git"
+  },
+  "keywords": [
+    "teraflop",
+    "webgpu",
+    "3d"
+  ],
+  "author": "Chance Snow <git@chancesnow.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chances/teraflop/issues"
+  },
+  "homepage": "https://github.com/chances/teraflop#readme",
+  "devDependencies": {
+    "cmake-js": "^5.2.0",
+    "node-addon-api": "^1.6.3"
+  }
+}
