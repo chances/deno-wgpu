@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "install": "cmake-js compile",
+    "build": "cmake-js build",
+    "clean": "rm -r build",
     "test": "tape"
   },
   "repository": {
