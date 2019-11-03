@@ -14,6 +14,7 @@
   "keywords": [
     "teraflop",
     "webgpu",
+    "gpu",
     "3d"
   ],
   "author": "Chance Snow <git@chancesnow.me>",
@@ -23,7 +24,10 @@
   },
   "homepage": "https://github.com/chances/teraflop#readme",
   "devDependencies": {
-    "cmake-js": "^5.2.0",
-    "node-addon-api": "^1.6.3"
+    "cmake-js": "^6.0.0",
+    "node-addon-api": "^1.7.1"
+  },
+  "dependencies": {
+    "bindings": "^1.5.0"
   }
 }
