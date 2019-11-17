@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/third_party/wgpu/ffi"
             ],
             "defines": [],
             "macFrameworkPath": [

@@ -1,4 +1,5 @@
 #include <napi.h>
+#include <wgpu.h>
 
 static Napi::String Method(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();

@@ -26,12 +26,16 @@ execute_process(COMMAND node -p "require('node-addon-api').include"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE NODE_ADDON_API_DIR
         )
+string(REPLACE "\n" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 
 add_definitions(-DNAPI_VERSION=3)
 
 # Disable deprecated N-API APIs
 add_compile_definitions(NODE_ADDON_API_DISABLE_DEPRECATED)
+
+# Include gfx-rs WebGPU FFI
+get_filename_component(WGPU_FFI_DIR "third_party/wgpu/ffi" REALPATH)
 
 # Target Library
 
@@ -40,5 +44,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_JS_INC})
 target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_ADDON_API_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${WGPU_FFI_DIR})
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
