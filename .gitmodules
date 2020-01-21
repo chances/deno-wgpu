@@ -1,3 +1,6 @@
 [submodule "third_party/wgpu"]
 	path = third_party/wgpu
 	url = https://github.com/gfx-rs/wgpu.git
+[submodule "third_party/gpuweb/types"]
+	path = third_party/gpuweb/types
+	url = git://github.com/gpuweb/types.git
