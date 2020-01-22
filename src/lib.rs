@@ -53,3 +53,36 @@ pub fn op_test_async(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
 
   Op::Async(fut.boxed())
 }
+
+struct AdapterCollection {
+  pub v: Vec<wgpu::Adapter>,
+}
+static Adapters: AdapterCollection = AdapterCollection {
+  v: Vec::new(),
+};
+
+pub fn op_request_adapter(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
+  let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
+  let fut = async move {
+    // TODO: Deserialize the params data
+    let satisfactoryBackends = wgpu::BackendBit::from_bits(
+      wgpu::BackendBit::PRIMARY.bits() | wgpu::BackendBit::SECONDARY.bits()
+    ).unwrap();
+    wgpu::Adapter::request(
+      &wgpu::RequestAdapterOptions {
+          power_preference: wgpu::PowerPreference::Default,
+          backends: satisfactoryBackends,
+      },
+    )
+    .map(|adapter| {
+      Adapters.v.push(adapter);
+      let result = std::slice::from_ref::<u8>(&(Adapters.v.len() as u8));
+      let result_buf: Buf = Box::new(*result);
+      result_buf
+    })
+    .ok_or(())
+    // .ok_or(b"No satisfactory graphics device found")
+  };
+
+  Op::Async(fut.boxed())
+}
