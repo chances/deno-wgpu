@@ -2,6 +2,7 @@
     "cSpell.words": [
         "Napi",
         "deno",
+        "promisify",
         "wgpu"
     ]
 }
