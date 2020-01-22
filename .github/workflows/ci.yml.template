@@ -1,0 +1,41 @@
+name: deno-wgpu CI
+
+on: push
+#   schedule:
+#   - cron: '0 0 * * SUN'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: Install Dependencies
+      run: |
+        npm install
+    - name: Test
+      if: success()
+      run: |
+        make test-ci
+      env:
+        CI: true
+    - name: Build Site
+      if: success() && github.ref == 'refs/heads/master'
+      run: |
+        make
+      env:
+        CI: true
+        NODE_ENV: production
+    - name: Publish on Netlify
+      if: success() && github.ref == 'refs/heads/master'
+      run: |
+        npx netlify deploy --prod --dir $NETLIFY_DIR --auth $NETLIFY_AUTH_TOKEN --site $NETLIFY_SITE_ID
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_DIR: public
