@@ -23,6 +23,8 @@ maintenance = { status = "experimental" }
 name = "wgpu_deno"
 crate-type = ["cdylib"] # https://doc.rust-lang.org/reference/linkage.html
 
+# TODO: Run `git submodule update --init --recursive` at build time
+
 [dependencies]
 deno = "0.29.0"
 deno_core = "0.29.0"
