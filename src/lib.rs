@@ -1,3 +1,4 @@
+extern crate cty;
 #[macro_use]
 extern crate deno_core;
 extern crate futures;
@@ -7,10 +8,55 @@ use deno_core::Op;
 use deno_core::PluginInitContext;
 use deno_core::{Buf, PinnedBuf};
 use futures::future::FutureExt;
+use std::convert::TryInto;
 
 // Reference: https://github.com/denoland/deno/blob/master/test_plugin/src/lib.rs
 
+// Exported symbols in this lib
+// nm -D --defined-only target/debug/libwgpu_deno.so
+
+#[repr(C)]
+struct CPluginResult {
+  len: cty::c_int,
+  data: *const cty::uint8_t,
+}
+
+pub type CPluginOpFn = extern fn(data: *mut cty::uint8_t) -> CPluginResult;
+
+#[repr(C)]
+struct Registrar {
+  register_op: extern fn(name: *mut cty::c_char, op: CPluginOpFn),
+}
+
+// #[repr(C)]
+// struct LxcContainer {
+//     name: *mut c_char,
+//     configfile: *mut c_char,
+//     // ...
+//     numthreads: c_int,
+//     // ...
+//     is_defined_f: extern fn(c: *mut LxcContainer) -> bool,
+//     state_f: extern fn(c: *mut LxcContainer) -> *const c_char,
+// }
+
+extern {
+  fn register_ops(registrar: *const Registrar);
+}
+
 fn init(context: &mut dyn PluginInitContext) {
+  unsafe {
+    register_ops(&Registrar {
+      register_op: |name: *mut cty::c_char, op: CPluginOpFn| {
+        let nameAsStr = std::ffi::CStr::from_ptr(name).to_str().unwrap();
+        context.register_op(nameAsStr, Box::new(|data: &[u8], zero_copy: Option<PinnedBuf>| {
+          let op_result = op(data.as_mut_ptr());
+          let op_result_slice = std::slice::from_raw_parts(op_result.data, op_result.len.try_into().unwrap());
+          let result: Buf = Box::from(op_result_slice);
+          Op::Sync(result)
+        }))
+      }
+    })
+  }
   context.register_op("testSync", Box::new(op_test_sync));
   context.register_op("testAsync", Box::new(op_test_async));
 }
@@ -61,28 +107,28 @@ static Adapters: AdapterCollection = AdapterCollection {
   v: Vec::new(),
 };
 
-pub fn op_request_adapter(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
-  let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
-  let fut = async move {
-    // TODO: Deserialize the params data
-    let satisfactoryBackends = wgpu::BackendBit::from_bits(
-      wgpu::BackendBit::PRIMARY.bits() | wgpu::BackendBit::SECONDARY.bits()
-    ).unwrap();
-    wgpu::Adapter::request(
-      &wgpu::RequestAdapterOptions {
-          power_preference: wgpu::PowerPreference::Default,
-          backends: satisfactoryBackends,
-      },
-    )
-    .map(|adapter| {
-      Adapters.v.push(adapter);
-      let result = std::slice::from_ref::<u8>(&(Adapters.v.len() as u8));
-      let result_buf: Buf = Box::new(*result);
-      result_buf
-    })
-    .ok_or(())
-    // .ok_or(b"No satisfactory graphics device found")
-  };
+// pub fn op_request_adapter(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
+//   let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
+//   let fut = async move {
+//     // TODO: Deserialize the params data
+//     let satisfactoryBackends = wgpu::BackendBit::from_bits(
+//       wgpu::BackendBit::PRIMARY.bits() | wgpu::BackendBit::SECONDARY.bits()
+//     ).unwrap();
+//     wgpu::Adapter::request(
+//       &wgpu::RequestAdapterOptions {
+//           power_preference: wgpu::PowerPreference::Default,
+//           backends: satisfactoryBackends,
+//       },
+//     )
+//     .map(|adapter| {
+//       Adapters.v.push(adapter);
+//       let result = std::slice::from_ref::<u8>(&(Adapters.v.len() as u8));
+//       let result_buf: Buf = Box::new(*result);
+//       result_buf
+//     })
+//     .ok_or(())
+//     // .ok_or(b"No satisfactory graphics device found")
+//   };
 
-  Op::Async(fut.boxed())
-}
+//   Op::Async(fut.boxed())
+// }
