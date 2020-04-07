@@ -3,6 +3,7 @@
         "Napi",
         "deno",
         "promisify",
-        "wgpu"
+        "wgpu",
+        "winit"
     ]
 }

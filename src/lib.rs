@@ -2,6 +2,8 @@
 extern crate deno_core;
 extern crate futures;
 extern crate futures_executor;
+extern crate serde;
+extern crate serde_json;
 
 // References:
 // https://github.com/eliassjogreen/deno_webview/blob/e706cf83bd7230e528afef07c6aa8ea669eb48e9/src/lib.rs
@@ -16,12 +18,12 @@ use deno_core::PluginInitContext;
 use deno_core::{Buf, ZeroCopyBuf};
 use futures::future::FutureExt;
 use futures_executor::block_on;
-// use std::convert::TryInto;
+use serde::{Deserialize, Serialize};
 
 use winit::{
   event::{Event, WindowEvent},
   event_loop::{ControlFlow, EventLoop},
-  window::Window,
+  window::{Window, WindowId},
 };
 
 fn init(context: &mut dyn PluginInitContext) {
@@ -29,6 +31,34 @@ fn init(context: &mut dyn PluginInitContext) {
   context.register_op("requestAdapter", Box::new(op_request_adapter));
 }
 init_fn!(init);
+
+#[derive(Serialize)]
+struct OpResponse<T> {
+  err: Option<String>,
+  ok: Option<T>,
+}
+
+// TODO: Generate struct decls given WebGPU WebIDL definitions
+// https://crates.io/crates/webidl
+
+#[derive(Serialize)]
+struct RequestAdapterResult {
+  id: u32,
+}
+
+fn serialize_response<T>(response: Result<T, String>) -> Buf where T: Serialize {
+  let response: OpResponse<T> = match response {
+    Err(message) => OpResponse {
+      err: Some(message),
+      ok: None
+    },
+    Ok(data) => OpResponse {
+      err: None,
+      ok: Some(data)
+    }
+  };
+  serde_json::to_vec(&response).unwrap().into_boxed_slice()
+}
 
 pub fn op_test_sync(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
   if let Some(buf) = zero_copy {
@@ -46,10 +76,12 @@ pub fn op_test_sync(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
 
 use lazy_static::lazy_static;
 use std::sync::Mutex;
+use std::collections::HashMap;
 
 // https://stackoverflow.com/a/27826181/1363247
 lazy_static! {
-  static ref ADAPTERS: Mutex<Vec<wgpu::Adapter>> = Mutex::new(Vec::new());
+  static ref WINDOWS: Mutex<Vec<Window>> = Mutex::new(Vec::new());
+  static ref ADAPTERS: Mutex<HashMap<WindowId, wgpu::Adapter>> = Mutex::new(HashMap::new());
 }
 
 // TODO: Consider changing this to an op that creates the window w/ an adapter
@@ -59,9 +91,13 @@ pub fn op_request_adapter(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp
     // let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
 
     let event_loop = EventLoop::new();
-    let window = winit::window::Window::new(&event_loop).unwrap();
-    // let size = window.inner_size();
+    let window = Window::new(&event_loop).unwrap();
+    let window_id = window.id();
     let surface = wgpu::Surface::create(&window);
+
+    let mut windows = WINDOWS.lock().unwrap();
+    windows.push(window);
+
     let satisfactory_backends = wgpu::BackendBit::from_bits(
       wgpu::BackendBit::PRIMARY.bits() | wgpu::BackendBit::SECONDARY.bits(),
     )
@@ -72,20 +108,24 @@ pub fn op_request_adapter(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp
     };
 
     let future_adapter =
-      wgpu::Adapter::request(&adapter_options, satisfactory_backends).map(|adapter| {
-        // TODO: Check for None adapter
-        let mut adapters = ADAPTERS.lock().unwrap();
-        adapters.push(adapter.unwrap());
-        let adapters_count = adapters.len() as u8;
-        let result = std::slice::from_ref::<u8>(&adapters_count);
-        let result_box: Buf = result.into();
-        Ok(result_box)
+      wgpu::Adapter::request(&adapter_options, satisfactory_backends).map(|maybe_adapter| {
+        let adapter_or_err = match maybe_adapter {
+          None => {
+            Err(String::from("Could not find satisfactory adapter"))
+          },
+          Some(adapter) => {
+            let mut adapters = ADAPTERS.lock().unwrap();
+            adapters.insert(window_id, adapter);
+            let adapters_count = adapters.len() as u32;
+            Ok(RequestAdapterResult { id: adapters_count })
+          }
+        };
+        Ok(serialize_response(adapter_or_err))
       });
-    // .ok_or(())
-    // .ok_or(b"No satisfactory graphics device found")
-    let result = block_on(future_adapter);
-    result
+    block_on(future_adapter)
   };
 
   Op::Async(fut.boxed())
 }
+
+// TODO: Add window resizing ops
