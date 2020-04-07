@@ -1,68 +1,28 @@
-extern crate cty;
 #[macro_use]
 extern crate deno_core;
 extern crate futures;
 
+// References:
+// https://github.com/eliassjogreen/deno_webview/blob/e706cf83bd7230e528afef07c6aa8ea669eb48e9/src/lib.rs
+// https://github.com/eliassjogreen/deno_webview/blob/master/src/lib.rs
+//
+// https://github.com/denoland/deno/blob/47a580293eb5c176497264f1c3f108bf6b2c480d/test_plugin/src/lib.rs
+// https://github.com/denoland/deno/blob/master/test_plugin/src/lib.rs
+
 use deno_core::CoreOp;
 use deno_core::Op;
 use deno_core::PluginInitContext;
-use deno_core::{Buf, PinnedBuf};
+use deno_core::{Buf, ZeroCopyBuf};
 use futures::future::FutureExt;
 use std::convert::TryInto;
 
-// Reference: https://github.com/denoland/deno/blob/master/test_plugin/src/lib.rs
-
-// Exported symbols in this lib
-// nm -D --defined-only target/debug/libwgpu_deno.so
-
-#[repr(C)]
-struct CPluginResult {
-  len: cty::c_int,
-  data: *const cty::uint8_t,
-}
-
-pub type CPluginOpFn = extern fn(data: *mut cty::uint8_t) -> CPluginResult;
-
-#[repr(C)]
-struct Registrar {
-  register_op: extern fn(name: *mut cty::c_char, op: CPluginOpFn),
-}
-
-// #[repr(C)]
-// struct LxcContainer {
-//     name: *mut c_char,
-//     configfile: *mut c_char,
-//     // ...
-//     numthreads: c_int,
-//     // ...
-//     is_defined_f: extern fn(c: *mut LxcContainer) -> bool,
-//     state_f: extern fn(c: *mut LxcContainer) -> *const c_char,
-// }
-
-extern {
-  fn register_ops(registrar: *const Registrar);
-}
-
 fn init(context: &mut dyn PluginInitContext) {
-  unsafe {
-    register_ops(&Registrar {
-      register_op: |name: *mut cty::c_char, op: CPluginOpFn| {
-        let nameAsStr = std::ffi::CStr::from_ptr(name).to_str().unwrap();
-        context.register_op(nameAsStr, Box::new(|data: &[u8], zero_copy: Option<PinnedBuf>| {
-          let op_result = op(data.as_mut_ptr());
-          let op_result_slice = std::slice::from_raw_parts(op_result.data, op_result.len.try_into().unwrap());
-          let result: Buf = Box::from(op_result_slice);
-          Op::Sync(result)
-        }))
-      }
-    })
-  }
   context.register_op("testSync", Box::new(op_test_sync));
   context.register_op("testAsync", Box::new(op_test_async));
 }
 init_fn!(init);
 
-pub fn op_test_sync(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
+pub fn op_test_sync(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
   if let Some(buf) = zero_copy {
     let data_str = std::str::from_utf8(&data[..]).unwrap();
     let buf_str = std::str::from_utf8(&buf[..]).unwrap();
@@ -76,7 +36,7 @@ pub fn op_test_sync(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
   Op::Sync(result_box)
 }
 
-pub fn op_test_async(data: &[u8], zero_copy: Option<PinnedBuf>) -> CoreOp {
+pub fn op_test_async(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
   let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
   let fut = async move {
     if let Some(buf) = zero_copy {
