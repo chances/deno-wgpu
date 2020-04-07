@@ -1,0 +1,70 @@
+name: Deno WebGPU CI
+
+# Reference: https://github.com/eliassjogreen/deno_webview/blob/66ae7d3790955a856a3d65ece18e5131bc270375/.github/workflows/ci.yml
+
+on: push
+#   schedule:
+#   - cron: '0 0 * * SUN'
+
+jobs:
+  build:
+    name: ${{ matrix.kind }} ${{ matrix.os }}
+    timeout-minutes: 60
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-latest, ubuntu-16.04]
+
+    env:
+      GH_ACTIONS: true
+      RUST_BACKTRACE: full
+      DENO_BUILD_MODE: release
+      V8_BINARY: true
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Rust 1.42.0
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: "1.42.0"
+    - name: Log versions
+      run: |
+        node -v
+        rustc --version
+        cargo --version
+    # - name: Use Node.js 12.x
+    #   uses: actions/setup-node@v1
+    #   with:
+    #     node-version: 12.x
+
+    # Cache cargo libs
+    - name: Cache Cargo registry
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+    - name: Cache Cargo index
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+    - name: Cache Cargo build
+      uses: actions/cache@v1
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+    - name: Build
+      env:
+        RUST_BACKTRACE: 1
+      run: cargo build --release
+
+    - name: Install Dependencies
+      run: |
+        npm install
+    - name: Test
+      if: success()
+      run: |
+        make test-ci
+      env:
+        CI: true
