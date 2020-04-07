@@ -59,12 +59,13 @@ jobs:
         RUST_BACKTRACE: 1
       run: cargo build --release
 
-    - name: Install Dependencies
-      run: |
-        npm install
-    - name: Test
-      if: success()
-      run: |
-        make test-ci
-      env:
-        CI: true
+    # TODO: Deno tests
+    # - name: Install Dependencies
+    #   run: |
+    #     npm install
+    # - name: Test
+    #   if: success()
+    #   run: |
+    #     make test-ci
+    #   env:
+    #     CI: true
