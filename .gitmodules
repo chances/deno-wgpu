@@ -4,3 +4,6 @@
 [submodule "third_party/gpuweb/types"]
 	path = third_party/gpuweb/types
 	url = git://github.com/gpuweb/types.git
+[submodule "third_party/gpuweb/spec"]
+	path = third_party/gpuweb/spec
+	url = git://github.com/gpuweb/gpuweb
