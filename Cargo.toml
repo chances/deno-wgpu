@@ -5,7 +5,7 @@ authors = ["Chance Snow <git@chancesnow.me>"]
 edition = "2018"
 publish = false # TODO: Should I publish this package?
 
-keywords = ["deno-module", "deno-bindings", "gfx-rs", "webgpu"]
+keywords = ["deno-module", "deno-bindings", "deno-plugin", "gfx-rs", "webgpu"]
 # See more categories at https://crates.io/category_slugs
 categories = ["game-development", "graphics", "rendering"]
 homepage = "https://github.com/chances/deno-wgpu"
@@ -19,18 +19,22 @@ maintenance = { status = "experimental" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# Referencing the Deno plugin example:
+# https://github.com/denoland/deno/blob/47a580293eb5c176497264f1c3f108bf6b2c480d/test_plugin/Cargo.toml#L9
+
 [lib]
 name = "wgpu_deno"
-crate-type = ["cdylib"] # https://doc.rust-lang.org/reference/linkage.html
+# https://doc.rust-lang.org/reference/linkage.html
+crate-type = ["cdylib"]
 
 # TODO: Run `git submodule update --init --recursive` at build time
 
 [dependencies]
 cty = "0.2.1"
-deno = "0.29.0"
-deno_core = "0.29.0"
-futures = "0.3.1"
-wgpu = "0.4.0"
+deno = "0.38.0"
+deno_core = "0.39.0"
+futures = "0.3.4"
+wgpu = "0.5.0"
 
 [build-dependencies]
 cc = "1.0.50"
