@@ -20,6 +20,11 @@ use futures::future::FutureExt;
 use futures_executor::block_on;
 use serde::{Deserialize, Serialize};
 
+// Generated modules
+// deno --allow-read --allow-write --allow-run scripts/idl.ts
+mod enums;
+mod params;
+
 use winit::{
   event::{Event, WindowEvent},
   event_loop::{ControlFlow, EventLoop},
