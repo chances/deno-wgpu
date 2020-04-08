@@ -23,6 +23,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Update Git Submodules
+      run: git submodule update --init --recursive
     - name: Use Rust 1.42.0
       uses: hecrj/setup-rust-action@v1
       with:
