@@ -116,16 +116,19 @@ export function methodParams(_interface: Interface, method: Operation) {
   if (methodName === 'Finish') {
     methodName = `${_interface.name}${methodName}`
   }
-  return `#[derive(Deserialize)]
-struct ${methodName}Params {
-${method.arguments.map(arg => {
-  let type = 'String'
-  if (arg.optional) {
-    type = `Option<${type}>`
-  }
-  return indent(`${arg.name}: ${type}`, 2)
-}).join(',\n')},
-}`
+  const params = method.arguments.map(arg => {
+    let type = 'String'
+    if (arg.optional) {
+      type = `Option<${type}>`
+    }
+
+    const allowUnused = indent('#[allow(dead_code)]')
+    const paramDecl = indent(`${snakeCase(arg.name)}: ${type}`)
+    return `${allowUnused}\n${paramDecl},`
+  }).join('\n')
+
+  const attrs = '#[derive(Deserialize)]\n#[serde(rename_all = "camelCase")]'
+  return `${attrs}\nstruct ${methodName}Params {\n${params}\n}`
 }
 
 interface NamedDeclaration {

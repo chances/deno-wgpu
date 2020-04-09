@@ -37,11 +37,15 @@ export async function genBindings() {
   console.log(`Generated ${enumsFilePath}`)
 
   // Emit method params
-  const methodParams = idl.interfaces.map(_interface =>
-    _interface.methods
+  const methodParams = idl.interfaces.map(_interface => {
+    const interfaceComment = `// ${_interface.name}`
+    const methodParams = _interface.methods
       .filter(idl2rust.methodWithParams)
       .map(method => `${idl2rust.methodParams(_interface, method)}\n\n`).join('')
-  ).join('')
+
+    const noMethodsComment = methodParams.length === 0 ? ' has no methods\n' : ''
+    return `${interfaceComment}${noMethodsComment}\n${methodParams}`
+  }).join('')
 
   const paramsFilePath = path.join('src', 'params.rs')
   await writeFileStr(paramsFilePath, `use serde::Deserialize;\n\n${methodParams}`)
