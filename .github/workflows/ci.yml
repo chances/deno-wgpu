@@ -61,8 +61,6 @@ jobs:
         path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Gen WebGPU IDL Bindings
-      run: deno --allow-read --allow-write --allow-run scripts/idl.ts
     - name: Build
       env:
         RUST_BACKTRACE: 1
