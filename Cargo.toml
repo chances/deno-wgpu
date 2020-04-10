@@ -27,7 +27,7 @@ name = "wgpu_deno"
 # https://doc.rust-lang.org/reference/linkage.html
 crate-type = ["cdylib"]
 
-# TODO: Run `git submodule update --init --recursive` at build time
+# pkg-config --variable pc_path pkg-config
 
 [dependencies]
 deno_core = "0.38.0"

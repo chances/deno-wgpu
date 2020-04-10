@@ -5,13 +5,6 @@ extern crate futures_executor;
 extern crate serde;
 extern crate serde_json;
 
-// References:
-// https://github.com/eliassjogreen/deno_webview/blob/e706cf83bd7230e528afef07c6aa8ea669eb48e9/src/lib.rs
-// https://github.com/eliassjogreen/deno_webview/blob/master/src/lib.rs
-//
-// https://github.com/denoland/deno/blob/47a580293eb5c176497264f1c3f108bf6b2c480d/test_plugin/src/lib.rs
-// https://github.com/denoland/deno/blob/master/test_plugin/src/lib.rs
-
 use deno_core::CoreOp;
 use deno_core::Op;
 use deno_core::PluginInitContext;
@@ -19,6 +12,13 @@ use deno_core::{Buf, ZeroCopyBuf};
 use futures::future::FutureExt;
 use futures_executor::block_on;
 use serde::{Deserialize, Serialize};
+
+// References:
+// https://github.com/eliassjogreen/deno_webview/blob/e706cf83bd7230e528afef07c6aa8ea669eb48e9/src/lib.rs
+// https://github.com/eliassjogreen/deno_webview/blob/master/src/lib.rs
+//
+// https://github.com/denoland/deno/blob/47a580293eb5c176497264f1c3f108bf6b2c480d/test_plugin/src/lib.rs
+// https://github.com/denoland/deno/blob/master/test_plugin/src/lib.rs
 
 // Generated modules
 // deno --allow-read --allow-write --allow-run scripts/idl.ts
@@ -36,6 +36,8 @@ fn init(context: &mut dyn PluginInitContext) {
   context.register_op("requestAdapter", Box::new(op_request_adapter));
 }
 init_fn!(init);
+
+// TODO: Post about this project to https://github.com/denoland/deno/issues/1629 and a plugin wip issue, (i.e. a la https://github.com/denoland/deno/issues/4481)
 
 #[derive(Serialize)]
 struct OpResponse<T> {

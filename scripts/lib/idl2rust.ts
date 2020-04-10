@@ -122,11 +122,12 @@ export function methodParams(_interface: Interface, method: Operation) {
       type = `Option<${type}>`
     }
 
-    const allowUnused = indent('#[allow(dead_code)]')
+    const allowUnused = indent('#[allow(dead_code)]') // https://stackoverflow.com/a/32908553/1363247
     const paramDecl = indent(`${snakeCase(arg.name)}: ${type}`)
     return `${allowUnused}\n${paramDecl},`
   }).join('\n')
 
+  // Serde attributes, field name format (https://serde.rs/attr-rename.html#serialize-fields-as-camelcase)
   const attrs = '#[derive(Deserialize)]\n#[serde(rename_all = "camelCase")]'
   return `${attrs}\nstruct ${methodName}Params {\n${params}\n}`
 }
