@@ -1,0 +1,40 @@
+[package]
+name = "wgpu_deno"
+version = "0.1.0"
+authors = ["Chance Snow <git@chancesnow.me>"]
+edition = "2018"
+publish = false # TODO: Should I publish this package?
+
+keywords = ["deno-module", "deno-bindings", "deno-plugin", "gfx-rs", "webgpu"]
+# See more categories at https://crates.io/category_slugs
+categories = ["game-development", "graphics", "rendering"]
+homepage = "https://github.com/chances/deno-wgpu"
+repository = "https://github.com/chances/deno-wgpu.git"
+# TODO: Add a readme
+# readme = "README.md"
+license = "MIT"
+
+[badges]
+maintenance = { status = "experimental" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# Referencing the Deno plugin example:
+# https://github.com/denoland/deno/blob/47a580293eb5c176497264f1c3f108bf6b2c480d/test_plugin/Cargo.toml#L9
+
+[lib]
+name = "wgpu_deno"
+# https://doc.rust-lang.org/reference/linkage.html
+crate-type = ["cdylib"]
+
+# pkg-config --variable pc_path pkg-config
+
+[dependencies]
+deno_core = "0.38.0"
+wgpu = "0.5.0"
+winit = "0.22"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3.4"
+futures-executor = "0.3.4"
+lazy_static = "1.4.0"

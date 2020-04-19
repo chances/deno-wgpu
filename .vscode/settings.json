@@ -1,5 +1,10 @@
 {
     "cSpell.words": [
-        "Napi"
-    ]
+        "Napi",
+        "deno",
+        "promisify",
+        "wgpu",
+        "winit"
+    ],
+    "deno.enable": true
 }
