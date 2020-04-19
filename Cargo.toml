@@ -10,8 +10,7 @@ keywords = ["deno-module", "deno-bindings", "deno-plugin", "gfx-rs", "webgpu"]
 categories = ["game-development", "graphics", "rendering"]
 homepage = "https://github.com/chances/deno-wgpu"
 repository = "https://github.com/chances/deno-wgpu.git"
-# TODO: Add a readme
-# readme = "README.md"
+readme = "README.md"
 license = "MIT"
 
 [badges]
@@ -30,7 +29,7 @@ crate-type = ["cdylib"]
 # pkg-config --variable pc_path pkg-config
 
 [dependencies]
-deno_core = "0.38.0"
+deno_core = "0.41.0"
 wgpu = "0.5.0"
 winit = "0.22"
 serde = { version = "1.0", features = ["derive"] }
