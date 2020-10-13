@@ -5,10 +5,9 @@ extern crate futures_executor;
 extern crate serde;
 extern crate serde_json;
 
-use deno_core::CoreOp;
-use deno_core::Op;
-use deno_core::PluginInitContext;
-use deno_core::{Buf, ZeroCopyBuf};
+use deno_core::plugin_api::Interface;
+use deno_core::plugin_api::Op;
+use deno_core::plugin_api::ZeroCopyBuf;
 use futures::future::FutureExt;
 use futures_executor::block_on;
 use serde::{Deserialize, Serialize};
@@ -31,11 +30,11 @@ use winit::{
   window::{Window, WindowId},
 };
 
-fn init(context: &mut dyn PluginInitContext) {
-  context.register_op("testSync", Box::new(op_test_sync));
-  context.register_op("requestAdapter", Box::new(op_request_adapter));
+#[no_mangle]
+pub fn deno_plugin_init(interface: &mut dyn Interface) {
+  interface.register_op("testSync", op_test_sync);
+  interface.register_op("requestAdapter", op_request_adapter);
 }
-init_fn!(init);
 
 // TODO: Post about this project to https://github.com/denoland/deno/issues/1629 and a plugin wip issue, (i.e. a la https://github.com/denoland/deno/issues/4481)
 
@@ -53,7 +52,7 @@ struct RequestAdapterResult {
   id: u32,
 }
 
-fn serialize_response<T>(response: Result<T, String>) -> Buf where T: Serialize {
+fn serialize_response<T>(response: Result<T, String>) -> Box<[u8]> where T: Serialize {
   let response: OpResponse<T> = match response {
     Err(message) => OpResponse {
       err: Some(message),
@@ -67,17 +66,16 @@ fn serialize_response<T>(response: Result<T, String>) -> Buf where T: Serialize 
   serde_json::to_vec(&response).unwrap().into_boxed_slice()
 }
 
-pub fn op_test_sync(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
-  if let Some(buf) = zero_copy {
-    let data_str = std::str::from_utf8(&data[..]).unwrap();
-    let buf_str = std::str::from_utf8(&buf[..]).unwrap();
-    println!(
-      "Hello from plugin. data: {} | zero_copy: {}",
-      data_str, buf_str
-    );
-  }
+pub fn op_test_sync(_interface: &mut dyn Interface, zero_copy: &mut [ZeroCopyBuf]) -> Op {
+  let buf = &zero_copy[0][..];
+  let buf_str = std::str::from_utf8(buf).unwrap();
+  println!(
+    "Hello from plugin. zero_copy: {}",
+    buf_str
+  );
+
   let result = b"test";
-  let result_box: Buf = Box::new(*result);
+  let result_box = Box::new(*result);
   Op::Sync(result_box)
 }
 
@@ -92,10 +90,11 @@ lazy_static! {
 }
 
 // TODO: Consider changing this to an op that creates the window w/ an adapter
-pub fn op_request_adapter(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
+pub fn op_request_adapter(_interface: &mut dyn Interface, zero_copy: &mut [ZeroCopyBuf]) -> Op {
   let fut = async move {
     // TODO: Deserialize the params data
-    // let data_str = std::str::from_utf8(&data[..]).unwrap().to_string();
+    // let buf = &zero_copy[0][..];
+    // let buf_str = std::str::from_utf8(buf).unwrap();
 
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
@@ -127,7 +126,7 @@ pub fn op_request_adapter(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp
             Ok(RequestAdapterResult { id: adapters_count })
           }
         };
-        Ok(serialize_response(adapter_or_err))
+        serialize_response(adapter_or_err)
       });
     block_on(future_adapter)
   };

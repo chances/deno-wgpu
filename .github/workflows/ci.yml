@@ -28,11 +28,11 @@ jobs:
     - name: Setup Deno
       uses: denolib/setup-deno@master
       with:
-        deno-version: 0.x
-    - name: Use Rust 1.42.0
+        deno-version: 1.x
+    - name: Use Rust 1.47.0
       uses: hecrj/setup-rust-action@v1
       with:
-        rust-version: "1.42.0"
+        rust-version: "1.47.0"
     - name: Log versions
       run: |
         deno --version

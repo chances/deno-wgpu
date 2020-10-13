@@ -1,11 +1,13 @@
-import { readFileStr } from 'https://deno.land/std/fs/mod.ts'
-
 import { pascalCase, snakeCase } from 'https://github.com/chances/deno-change-case/raw/deno-v0.40.0/mod.ts'
 import * as webidl from 'https://cdn.pika.dev/webidl2@^23.10.1'
 /// <reference types="http://cdn.pika.dev/-/webidl2@v23.11.0-SUgViYS7k79m9zpJhPKL/dist=es2017,mode=types/index.d.ts" />
 
+function readFileStr(filePath: string) {
+  return Deno.readTextFile(filePath)
+}
+
 export async function parse(file: string): Promise<IDLDocument> {
-  const fileContents = await readFileStr(file, { encoding: 'utf8' });
+  const fileContents = await readFileStr(file);
   return new IDLDocument(webidl.parse(fileContents))
 }
 

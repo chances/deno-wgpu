@@ -1,12 +1,17 @@
-import { exists, writeFileStr } from 'https://deno.land/std/fs/mod.ts'
-import * as path from 'https://deno.land/std/path/mod.ts'
+import { exists } from 'https://deno.land/std@0.67.0/fs/mod.ts'
+import * as path from 'https://deno.land/std@0.67.0/path/mod.ts'
 
 import * as idl2rust from './lib/idl2rust.ts'
+
+const encoder = new TextEncoder()
+function writeFileStr(filePath: string, content: string) {
+  return Deno.writeFile(filePath, encoder.encode(content))
+}
 
 const gpuWebPath = 'third_party/gpuweb/spec'
 
 export async function genBindings() {
-  const status = await makeWebGpuIdl();
+  const status = await makeWebGpuIdl()
   if (status !== true) {
     console.error('Failed to generate webgpu.idl')
     Deno.exit(status || 1)

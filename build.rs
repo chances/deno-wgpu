@@ -6,7 +6,7 @@ use std::process::Command;
 fn main() {
   let mut gen_idl = deno_cmd();
 
-  gen_idl.args(&["--allow-read", "--allow-write", "--allow-run", "scripts/idl.ts"]);
+  gen_idl.args(&["run", "--allow-read", "--allow-write", "--allow-run", "scripts/idl.ts"]);
 
   let gen_idl_err = String::from("failed to generate rust interfaces from WebGPU IDL");
   let output = gen_idl.output().expect(gen_idl_err.as_str());
